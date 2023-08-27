@@ -75,7 +75,7 @@ module.exports = class WireGuard {
 
           throw err;
         });
-        
+
         await this.__syncConfig();
 
         return config;
@@ -100,14 +100,14 @@ module.exports = class WireGuard {
 [Interface]
 PrivateKey = ${config.server.privateKey}
 Address = ${config.server.address}${address.subnet}
-ListenPort = ${WG_PORT}
-PreUp = ${WG_PRE_UP}\n`;
+ListenPort = ${WG_PORT}\n`;
 
     if (ENFORCE_WG_ALLOWED_IPS) {
       result += `AllowedIPs = ${WG_ALLOWED_IPS}\n`;
     }
 
-    result += `PreUp = ${WG_PRE_UP}
+    result += `PostUp = ${WG_POST_UP}
+PreUp = ${WG_PRE_UP}
 PreDown = ${WG_PRE_DOWN}
 PostDown = ${WG_POST_DOWN}
 `;
@@ -120,8 +120,8 @@ PostDown = ${WG_POST_DOWN}
 # Client: ${client.name} (${clientId})
 [Peer]
 PublicKey = ${client.publicKey}
-`+ (client.preSharedKey ? `PresharedKey = ${client.preSharedKey}\n`: ``) +
-`AllowedIPs = ${client.address}/32`;
+${client.preSharedKey ? `PresharedKey = ${client.preSharedKey}\n` : ''
+}AllowedIPs = ${client.address}/32`;
     }
 
     debug('Config saving...');
@@ -215,8 +215,8 @@ ${WG_MTU ? `MTU = ${WG_MTU}` : ''}
 
 [Peer]
 PublicKey = ${config.server.publicKey}
-`+ (client.preSharedKey ? `PresharedKey = ${client.preSharedKey}\n`: ``) +
-`AllowedIPs = ${WG_ALLOWED_IPS}
+${client.preSharedKey ? `PresharedKey = ${client.preSharedKey}\n` : ''
+}AllowedIPs = ${WG_ALLOWED_IPS}
 PersistentKeepalive = ${WG_PERSISTENT_KEEPALIVE}
 Endpoint = ${WG_HOST}:${WG_PORT}`;
   }
@@ -243,7 +243,7 @@ Endpoint = ${WG_HOST}:${WG_PORT}`;
     const preSharedKey = await Util.exec('wg genpsk');
 
     // Calculate next IP
-    
+
     let address;
     try {
       for (let i = 1; ; i++) {
